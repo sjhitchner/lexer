@@ -74,6 +74,8 @@ func (t *Lexer) Emit(i TokenType) {
 		return
 	}
 
+	fmt.Printf("E '%s'\n", t.input[t.start:t.pos])
+
 	t.tokens <- Token{i, t.input[t.start:t.pos]}
 	t.start = t.pos
 }
@@ -93,7 +95,14 @@ func (t *Lexer) Next() rune {
 		t.width = 0
 		return EOF
 	}
+
+	fmt.Println("R", string(r))
 	return r
+}
+
+func (t *Lexer) Skip() {
+	t.Next()
+	t.Ignore()
 }
 
 // ignore skips over the pending input before this point.
@@ -125,14 +134,10 @@ func (l *Lexer) AcceptRun(valid string) {
 }
 
 func (l *Lexer) Matches(str string) bool {
-	// TODO UTF8 support?
-	for position := 0; position < len(str); position++ {
-		if rune(str[position]) != l.Next() {
-			l.Backup()
-			return false
-		}
+	if strings.HasPrefix(l.input[l.pos:], str) {
+		l.pos += len(str)
 	}
-	return true
+	return false
 }
 
 func (t *Lexer) Errorf(format string, args ...interface{}) StateFunc {
